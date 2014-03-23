@@ -53,6 +53,19 @@ describe "Authentication" do
       it { should_not have_link('Settings') }
       it { should_not have_link('Sign out') }
 
+      describe "in the Microposts controller" do
+
+        describe "submitting to the create action" do
+          before { post microposts_path }
+          specify { expect(response).to redirect_to(signin_path) }
+        end
+
+        describe "submitting to the destroy action" do
+          before { delete micropost_path(FactoryGirl.create(:micropost)) }
+          specify { expect(response).to redirect_to(signin_path) }
+        end
+      end
+
       describe "when attempting to visit a protected page" do
         before { visit edit_user_path(user) }
         it { should have_selector('div.alert.alert-notice') }
@@ -92,6 +105,15 @@ describe "Authentication" do
         describe "submitting a DELETE request to the Users#destroy action" do
           before { delete user_path(user) }
           specify { expect(response).to redirect_to(root_url) }
+        end
+      end
+
+      describe "as admin user" do
+        let(:admin) { FactoryGirl.create(:admin) }
+        before { sign_in admin }
+        describe "submit a DELETE request for himself" do
+          before { delete user_path(admin) }
+          specify { expect(change(User,:count).by(0)) }
         end
       end
     end
